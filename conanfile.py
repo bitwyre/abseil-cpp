@@ -29,19 +29,19 @@ class AbseilConan(ConanFile):
            Version(self.settings.compiler.version.value) < "14":
             raise ConanInvalidConfiguration("Abseil does not support MSVC < 14")
 
-    def build(self):
-        tools.replace_in_file("CMakeLists.txt", "project(absl CXX)", "project(absl CXX)\ninclude(conanbuildinfo.cmake)\nconan_basic_setup()")
+    def _configure_cmake(self):
         cmake = CMake(self)
         cmake.definitions["BUILD_TESTING"] = False
         cmake.configure()
+        return cmake
+
+    def build(self):
+        cmake = self._configure_cmake()
         cmake.build()
 
     def package(self):
-        self.copy("LICENSE", dst="licenses")
-        self.copy("*.h", dst="include", src=".")
-        self.copy("*.inc", dst="include", src=".")
-        self.copy("*.a", dst="lib", src=".", keep_path=False)
-        self.copy("*.lib", dst="lib", src=".", keep_path=False)
+        cmake = self._configure_cmake()
+        cmake.install()
 
     def package_info(self):
         if self.settings.os == "Linux":
